@@ -1,0 +1,114 @@
+﻿@page "/studentPage"
+@using Models;
+@using Services;
+@inject IStudentService studentService
+@inject ISnackbar Snackbar
+
+
+<h6>Students</h6>
+
+
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">Id</th>
+            <th scope="col">Name</th>
+            <th scope="col">DOB</th>
+            <th scope="col">Height</th>
+            <th scope="col">Weight</th>
+            <th scope="col">Class</th>
+            <th scope="col">Grade</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var student in Students)
+        {
+            <tr>
+                <th scope="row">@student.StudentID</th>
+                <td>@student.StudentName</td>
+                <td>@student.DateOfBirth</td>
+                <td>@student.Height</td>
+                <td>@student.Weight</td>
+                <td>@student.Grade.Section</td>
+                <td>@student.Grade.GradeName</td>
+            </tr>
+        }
+
+    </tbody>
+</table>
+
+<div class="d-flex">
+    <MudTextField @bind-Value="StudentId" Label="StudentId" Variant="Variant.Outlined"></MudTextField>
+    <MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="GetStudentById">
+        Get Student
+    </MudButton>
+</div>
+
+
+@if (Student != null)
+{
+    <h4>Retrieved Student from DB</h4>
+    <h6>Id: @Student.StudentID</h6>
+    <h4>Name: @Student.StudentName</h4>
+    <h6>DOB: @Student.DateOfBirth</h6>
+    <h6>Height: @Student.Height</h6>
+    <h6>Weight: @Student.Weight</h6>
+    <h6>Class:@Student.Grade.Section</h6>
+    <h4>Grade:@Student.Grade.GradeName</h4>
+}
+
+<br/>
+<h4>Add New Student To DB</h4>
+<EditForm Model="@StudentModel" OnValidSubmit="@HandleValidSubmit">
+    <h6>Id</h6>
+    <InputNumber @bind-Value="@StudentModel.StudentID" />
+    <h6>Name</h6>
+    <InputText @bind-Value="@StudentModel.StudentName" />
+    <h6>DOB</h6>
+    <InputDate @bind-Value="@StudentModel.DateOfBirth" />
+    <h6>Height</h6>
+    <InputNumber @bind-Value="@StudentModel.Height" />
+    <h6>Weight</h6>
+    <InputNumber @bind-Value="@StudentModel.Weight" />
+    <button type="submit">Submit</button>
+</EditForm>
+
+
+
+@code{
+
+    List<Student> Students { get; set; } = null!;
+    public Student Student { get; set; } = null!;
+
+    public Student StudentModel { get; set; } = new Student();
+
+    public int StudentId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Students = studentService.GetStudents();
+    }
+
+    private void GetStudentById()
+    {
+        var returnedStudent = studentService.GetStudentById(StudentId);
+        if (returnedStudent.Grade != null)
+        {
+            Student = studentService.GetStudentById(StudentId);
+            Snackbar.Add("Succesfully retreived student", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add("Student Id is empty or doesnt exist. Please try again", Severity.Error);
+        }
+    }
+
+    private void HandleValidSubmit()
+    {
+        studentService.AddStudent(StudentModel);
+        Students = studentService.GetStudents();
+        StateHasChanged();
+        Snackbar.Add("Succesfully retreived student", Severity.Success);
+    }
+    }
+}
